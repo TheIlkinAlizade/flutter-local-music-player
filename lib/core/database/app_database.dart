@@ -7,6 +7,13 @@ part 'app_database.g.dart';
 
 enum TrackSortField { title, artist, album, dateAdded, fileSize, favorite }
 
+class TrackWithArt {
+  final Track track;
+  final String? artPath;
+
+  const TrackWithArt({required this.track, this.artPath});
+}
+
 @DriftDatabase(tables: [Tracks, CoverArt, Playlists, PlaylistTracks, LibraryFolders])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'local_music_player'));
@@ -43,53 +50,50 @@ class AppDatabase extends _$AppDatabase {
     }
     await (delete(tracks)..where((t) => t.filePath.isNotIn(keepPaths))).go();
   }
-
-  Stream<List<Track>> watchLibrary({
+  
+  Stream<List<TrackWithArt>> watchLibrary({
     TrackSortField sortBy = TrackSortField.dateAdded,
     bool ascending = true,
     String? searchQuery,
     bool favoritesOnly = false,
   }) {
-    final query = select(tracks);
+    final query = select(tracks).join([
+      leftOuterJoin(coverArt, coverArt.hash.equalsExp(tracks.artHash)),
+    ]);
 
     if (favoritesOnly) {
-      query.where((t) => t.isFavorite.equals(true));
+      query.where(tracks.isFavorite.equals(true));
     }
 
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final q = '%${searchQuery.trim()}%';
-      query.where((t) => t.title.like(q) | t.artist.like(q) | t.album.like(q));
+      query.where(tracks.title.like(q) | tracks.artist.like(q) | tracks.album.like(q));
     }
 
     switch (sortBy) {
       case TrackSortField.title:
-        query.orderBy([
-          (t) => OrderingTerm(expression: t.title, mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-        ]);
+        query.orderBy([OrderingTerm(expression: tracks.title, mode: ascending ? OrderingMode.asc : OrderingMode.desc)]);
       case TrackSortField.artist:
-        query.orderBy([
-          (t) => OrderingTerm(expression: t.artist, mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-        ]);
+        query.orderBy([OrderingTerm(expression: tracks.artist, mode: ascending ? OrderingMode.asc : OrderingMode.desc)]);
       case TrackSortField.album:
-        query.orderBy([
-          (t) => OrderingTerm(expression: t.album, mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-        ]);
+        query.orderBy([OrderingTerm(expression: tracks.album, mode: ascending ? OrderingMode.asc : OrderingMode.desc)]);
       case TrackSortField.dateAdded:
-        query.orderBy([
-          (t) => OrderingTerm(expression: t.dateAdded, mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-        ]);
+        query.orderBy([OrderingTerm(expression: tracks.dateAdded, mode: ascending ? OrderingMode.asc : OrderingMode.desc)]);
       case TrackSortField.fileSize:
-        query.orderBy([
-          (t) => OrderingTerm(expression: t.fileSizeBytes, mode: ascending ? OrderingMode.asc : OrderingMode.desc)
-        ]);
+        query.orderBy([OrderingTerm(expression: tracks.fileSizeBytes, mode: ascending ? OrderingMode.asc : OrderingMode.desc)]);
       case TrackSortField.favorite:
         query.orderBy([
-          (t) => OrderingTerm(expression: t.isFavorite, mode: OrderingMode.desc),
-          (t) => OrderingTerm(expression: t.title, mode: OrderingMode.asc),
+          OrderingTerm(expression: tracks.isFavorite, mode: OrderingMode.desc),
+          OrderingTerm(expression: tracks.title, mode: OrderingMode.asc),
         ]);
     }
 
-    return query.watch();
+    return query.watch().map((rows) => rows
+        .map((row) => TrackWithArt(
+              track: row.readTable(tracks),
+              artPath: row.readTableOrNull(coverArt)?.cachedFilePath,
+            ))
+        .toList());
   }
   
   Future<void> setFavorite(int trackId, bool isFavorite) {
