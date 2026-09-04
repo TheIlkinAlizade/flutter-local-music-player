@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/database/app_database.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../../../core/database/app_database.dart';
+import '../../../../../core/theme/app_colors.dart';
 import 'cover_art_thumb.dart';
 
 class TrackGridTile extends StatelessWidget {
@@ -22,7 +22,6 @@ class TrackGridTile extends StatelessWidget {
               aspectRatio: 1,
               child: CoverArtThumb(
                 artPath: data.artPath,
-                size: double.infinity,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),

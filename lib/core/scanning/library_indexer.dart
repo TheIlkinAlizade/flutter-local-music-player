@@ -68,7 +68,7 @@ class LibraryIndexer {
       );
     }
 
-    await _db.deleteTracksNotInPaths(seenPaths);
+    await _db.deleteTracksUnderFolderNotInPaths(folderIdentifier, seenPaths);
   }
 
   Future<bool> _isUnchangedSinceLastScan(String filePath) async {

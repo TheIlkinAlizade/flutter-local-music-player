@@ -51,6 +51,16 @@ class AppDatabase extends _$AppDatabase {
     await (delete(tracks)..where((t) => t.filePath.isNotIn(keepPaths))).go();
   }
   
+  Future<void> deleteTracksUnderFolderNotInPaths(String folderRoot, Set<String> keepPaths) async {
+    if (keepPaths.isEmpty) {
+      await (delete(tracks)..where((t) => t.filePath.like('$folderRoot%'))).go();
+      return;
+    }
+    await (delete(tracks)
+          ..where((t) => t.filePath.like('$folderRoot%') & t.filePath.isNotIn(keepPaths)))
+        .go();
+  }
+  
   Stream<List<TrackWithArt>> watchLibrary({
     TrackSortField sortBy = TrackSortField.dateAdded,
     bool ascending = true,
