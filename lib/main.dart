@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/theme/app_theme.dart';
 import 'core/database/app_database.dart';
 import 'core/scanning/metadata_extractor.dart';
 import 'scan_test_screen.dart';
@@ -20,7 +21,7 @@ class LocalMusicPlayerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Local Music Player',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
+      theme: AppTheme.dark,
       home: const ScanTestScreen(),
     );
   }
