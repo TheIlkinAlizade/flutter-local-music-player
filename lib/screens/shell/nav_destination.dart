@@ -1,0 +1,1 @@
+enum NavDestination { library, favorites }

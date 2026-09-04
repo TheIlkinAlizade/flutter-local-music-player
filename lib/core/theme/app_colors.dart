@@ -4,6 +4,7 @@ class AppColors {
   static const background = Color(0xFF0B0D12);
   static const surface = Color(0xFF14171F);
   static const surfaceGlass = Color(0x99161A22);
+  static const surfaceGlassSolid = Color(0xE6161A22);
   static const border = Color(0x1FFFFFFF);
 
   static const textPrimary = Color(0xFFF4F5F7);

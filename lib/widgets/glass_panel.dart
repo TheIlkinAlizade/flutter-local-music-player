@@ -8,12 +8,14 @@ class GlassPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final BorderRadius borderRadius;
+  final Color backgroundColor;
 
   const GlassPanel({
     super.key,
     required this.child,
     this.padding,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
+    this.backgroundColor = AppColors.surfaceGlass,
   });
 
   @override
@@ -25,7 +27,7 @@ class GlassPanel extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: AppColors.surfaceGlass,
+            color: backgroundColor,
             borderRadius: borderRadius,
             border: Border.all(color: AppColors.border, width: 1),
           ),

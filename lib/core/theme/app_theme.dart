@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get dark {
     final base = ThemeData.dark(useMaterial3: true);
+    final textTheme = GoogleFonts.interTextTheme(base.textTheme);
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.background,
@@ -16,13 +18,13 @@ class AppTheme {
         error: AppColors.accentRed,
         onSurface: AppColors.textPrimary,
       ),
-      textTheme: base.textTheme.apply(
+      textTheme: textTheme.apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
       ).copyWith(
-        bodySmall: base.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-        bodyMedium: base.textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
-        titleMedium: base.textTheme.titleMedium?.copyWith(
+        bodySmall: textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+        bodyMedium: textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
+        titleMedium: textTheme.titleMedium?.copyWith(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
