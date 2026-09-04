@@ -20,10 +20,10 @@ class Tracks extends Table {
   IntColumn get fileSizeBytes => integer().nullable()();
   DateTimeColumn get fileModifiedAt => dateTime().nullable()();
   DateTimeColumn get dateAdded => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   TextColumn get artHash =>
       text().nullable().references(CoverArt, #hash, onDelete: KeyAction.setNull)();
 }
-
 class CoverArt extends Table {
   TextColumn get hash => text()();
   TextColumn get mimeType => text()();

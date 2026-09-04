@@ -530,6 +530,21 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
+  @override
+  late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _artHashMeta = const VerificationMeta(
     'artHash',
   );
@@ -560,6 +575,7 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
     fileSizeBytes,
     fileModifiedAt,
     dateAdded,
+    isFavorite,
     artHash,
   ];
   @override
@@ -669,6 +685,12 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         dateAdded.isAcceptableOrUnknown(data['date_added']!, _dateAddedMeta),
       );
     }
+    if (data.containsKey('is_favorite')) {
+      context.handle(
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
     if (data.containsKey('art_hash')) {
       context.handle(
         _artHashMeta,
@@ -740,6 +762,10 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, Track> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}date_added'],
       )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
       artHash: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}art_hash'],
@@ -768,6 +794,7 @@ class Track extends DataClass implements Insertable<Track> {
   final int? fileSizeBytes;
   final DateTime? fileModifiedAt;
   final DateTime dateAdded;
+  final bool isFavorite;
   final String? artHash;
   const Track({
     required this.id,
@@ -784,6 +811,7 @@ class Track extends DataClass implements Insertable<Track> {
     this.fileSizeBytes,
     this.fileModifiedAt,
     required this.dateAdded,
+    required this.isFavorite,
     this.artHash,
   });
   @override
@@ -817,6 +845,7 @@ class Track extends DataClass implements Insertable<Track> {
       map['file_modified_at'] = Variable<DateTime>(fileModifiedAt);
     }
     map['date_added'] = Variable<DateTime>(dateAdded);
+    map['is_favorite'] = Variable<bool>(isFavorite);
     if (!nullToAbsent || artHash != null) {
       map['art_hash'] = Variable<String>(artHash);
     }
@@ -851,6 +880,7 @@ class Track extends DataClass implements Insertable<Track> {
           ? const Value.absent()
           : Value(fileModifiedAt),
       dateAdded: Value(dateAdded),
+      isFavorite: Value(isFavorite),
       artHash: artHash == null && nullToAbsent
           ? const Value.absent()
           : Value(artHash),
@@ -877,6 +907,7 @@ class Track extends DataClass implements Insertable<Track> {
       fileSizeBytes: serializer.fromJson<int?>(json['fileSizeBytes']),
       fileModifiedAt: serializer.fromJson<DateTime?>(json['fileModifiedAt']),
       dateAdded: serializer.fromJson<DateTime>(json['dateAdded']),
+      isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       artHash: serializer.fromJson<String?>(json['artHash']),
     );
   }
@@ -898,6 +929,7 @@ class Track extends DataClass implements Insertable<Track> {
       'fileSizeBytes': serializer.toJson<int?>(fileSizeBytes),
       'fileModifiedAt': serializer.toJson<DateTime?>(fileModifiedAt),
       'dateAdded': serializer.toJson<DateTime>(dateAdded),
+      'isFavorite': serializer.toJson<bool>(isFavorite),
       'artHash': serializer.toJson<String?>(artHash),
     };
   }
@@ -917,6 +949,7 @@ class Track extends DataClass implements Insertable<Track> {
     Value<int?> fileSizeBytes = const Value.absent(),
     Value<DateTime?> fileModifiedAt = const Value.absent(),
     DateTime? dateAdded,
+    bool? isFavorite,
     Value<String?> artHash = const Value.absent(),
   }) => Track(
     id: id ?? this.id,
@@ -937,6 +970,7 @@ class Track extends DataClass implements Insertable<Track> {
         ? fileModifiedAt.value
         : this.fileModifiedAt,
     dateAdded: dateAdded ?? this.dateAdded,
+    isFavorite: isFavorite ?? this.isFavorite,
     artHash: artHash.present ? artHash.value : this.artHash,
   );
   Track copyWithCompanion(TracksCompanion data) {
@@ -967,6 +1001,9 @@ class Track extends DataClass implements Insertable<Track> {
           ? data.fileModifiedAt.value
           : this.fileModifiedAt,
       dateAdded: data.dateAdded.present ? data.dateAdded.value : this.dateAdded,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
       artHash: data.artHash.present ? data.artHash.value : this.artHash,
     );
   }
@@ -988,6 +1025,7 @@ class Track extends DataClass implements Insertable<Track> {
           ..write('fileSizeBytes: $fileSizeBytes, ')
           ..write('fileModifiedAt: $fileModifiedAt, ')
           ..write('dateAdded: $dateAdded, ')
+          ..write('isFavorite: $isFavorite, ')
           ..write('artHash: $artHash')
           ..write(')'))
         .toString();
@@ -1009,6 +1047,7 @@ class Track extends DataClass implements Insertable<Track> {
     fileSizeBytes,
     fileModifiedAt,
     dateAdded,
+    isFavorite,
     artHash,
   );
   @override
@@ -1029,6 +1068,7 @@ class Track extends DataClass implements Insertable<Track> {
           other.fileSizeBytes == this.fileSizeBytes &&
           other.fileModifiedAt == this.fileModifiedAt &&
           other.dateAdded == this.dateAdded &&
+          other.isFavorite == this.isFavorite &&
           other.artHash == this.artHash);
 }
 
@@ -1047,6 +1087,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
   final Value<int?> fileSizeBytes;
   final Value<DateTime?> fileModifiedAt;
   final Value<DateTime> dateAdded;
+  final Value<bool> isFavorite;
   final Value<String?> artHash;
   const TracksCompanion({
     this.id = const Value.absent(),
@@ -1063,6 +1104,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.fileSizeBytes = const Value.absent(),
     this.fileModifiedAt = const Value.absent(),
     this.dateAdded = const Value.absent(),
+    this.isFavorite = const Value.absent(),
     this.artHash = const Value.absent(),
   });
   TracksCompanion.insert({
@@ -1080,6 +1122,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     this.fileSizeBytes = const Value.absent(),
     this.fileModifiedAt = const Value.absent(),
     this.dateAdded = const Value.absent(),
+    this.isFavorite = const Value.absent(),
     this.artHash = const Value.absent(),
   }) : filePath = Value(filePath);
   static Insertable<Track> custom({
@@ -1097,6 +1140,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Expression<int>? fileSizeBytes,
     Expression<DateTime>? fileModifiedAt,
     Expression<DateTime>? dateAdded,
+    Expression<bool>? isFavorite,
     Expression<String>? artHash,
   }) {
     return RawValuesInsertable({
@@ -1114,6 +1158,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       if (fileSizeBytes != null) 'file_size_bytes': fileSizeBytes,
       if (fileModifiedAt != null) 'file_modified_at': fileModifiedAt,
       if (dateAdded != null) 'date_added': dateAdded,
+      if (isFavorite != null) 'is_favorite': isFavorite,
       if (artHash != null) 'art_hash': artHash,
     });
   }
@@ -1133,6 +1178,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
     Value<int?>? fileSizeBytes,
     Value<DateTime?>? fileModifiedAt,
     Value<DateTime>? dateAdded,
+    Value<bool>? isFavorite,
     Value<String?>? artHash,
   }) {
     return TracksCompanion(
@@ -1150,6 +1196,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
       fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
       fileModifiedAt: fileModifiedAt ?? this.fileModifiedAt,
       dateAdded: dateAdded ?? this.dateAdded,
+      isFavorite: isFavorite ?? this.isFavorite,
       artHash: artHash ?? this.artHash,
     );
   }
@@ -1199,6 +1246,9 @@ class TracksCompanion extends UpdateCompanion<Track> {
     if (dateAdded.present) {
       map['date_added'] = Variable<DateTime>(dateAdded.value);
     }
+    if (isFavorite.present) {
+      map['is_favorite'] = Variable<bool>(isFavorite.value);
+    }
     if (artHash.present) {
       map['art_hash'] = Variable<String>(artHash.value);
     }
@@ -1222,6 +1272,7 @@ class TracksCompanion extends UpdateCompanion<Track> {
           ..write('fileSizeBytes: $fileSizeBytes, ')
           ..write('fileModifiedAt: $fileModifiedAt, ')
           ..write('dateAdded: $dateAdded, ')
+          ..write('isFavorite: $isFavorite, ')
           ..write('artHash: $artHash')
           ..write(')'))
         .toString();
@@ -2640,6 +2691,7 @@ typedef $$TracksTableCreateCompanionBuilder =
       Value<int?> fileSizeBytes,
       Value<DateTime?> fileModifiedAt,
       Value<DateTime> dateAdded,
+      Value<bool> isFavorite,
       Value<String?> artHash,
     });
 typedef $$TracksTableUpdateCompanionBuilder =
@@ -2658,6 +2710,7 @@ typedef $$TracksTableUpdateCompanionBuilder =
       Value<int?> fileSizeBytes,
       Value<DateTime?> fileModifiedAt,
       Value<DateTime> dateAdded,
+      Value<bool> isFavorite,
       Value<String?> artHash,
     });
 
@@ -2777,6 +2830,11 @@ class $$TracksTableFilterComposer
 
   ColumnFilters<DateTime> get dateAdded => $composableBuilder(
     column: $table.dateAdded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2908,6 +2966,11 @@ class $$TracksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CoverArtTableOrderingComposer get artHash {
     final $$CoverArtTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2994,6 +3057,11 @@ class $$TracksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get dateAdded =>
       $composableBuilder(column: $table.dateAdded, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
 
   $$CoverArtTableAnnotationComposer get artHash {
     final $$CoverArtTableAnnotationComposer composer = $composerBuilder(
@@ -3086,6 +3154,7 @@ class $$TracksTableTableManager
                 Value<int?> fileSizeBytes = const Value.absent(),
                 Value<DateTime?> fileModifiedAt = const Value.absent(),
                 Value<DateTime> dateAdded = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
                 Value<String?> artHash = const Value.absent(),
               }) => TracksCompanion(
                 id: id,
@@ -3102,6 +3171,7 @@ class $$TracksTableTableManager
                 fileSizeBytes: fileSizeBytes,
                 fileModifiedAt: fileModifiedAt,
                 dateAdded: dateAdded,
+                isFavorite: isFavorite,
                 artHash: artHash,
               ),
           createCompanionCallback:
@@ -3120,6 +3190,7 @@ class $$TracksTableTableManager
                 Value<int?> fileSizeBytes = const Value.absent(),
                 Value<DateTime?> fileModifiedAt = const Value.absent(),
                 Value<DateTime> dateAdded = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
                 Value<String?> artHash = const Value.absent(),
               }) => TracksCompanion.insert(
                 id: id,
@@ -3136,6 +3207,7 @@ class $$TracksTableTableManager
                 fileSizeBytes: fileSizeBytes,
                 fileModifiedAt: fileModifiedAt,
                 dateAdded: dateAdded,
+                isFavorite: isFavorite,
                 artHash: artHash,
               ),
           withReferenceMapper: (p0) => p0
