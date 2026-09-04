@@ -30,12 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   drift: ^2.20.0
   drift_flutter: ^0.2.4
 
   metadata_god: ^1.1.0
-
+  flutter_rust_bridge: 2.11.1
+  
   just_audio: ^0.9.40
   just_audio_background: ^0.0.1-beta.13
 
