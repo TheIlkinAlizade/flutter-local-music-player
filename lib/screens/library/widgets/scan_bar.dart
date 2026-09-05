@@ -1,14 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../../core/database/app_database.dart';
-import '../../../../../core/scanning/library_indexer.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../widgets/glass_panel.dart';
-import '../../../../../main.dart';
+import '../../../core/database/app_database.dart';
 import '../../../core/database/tables.dart';
+import '../../../core/scanning/library_indexer.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../widgets/glass_panel.dart';
+import '../../../main.dart';
 
 class ScanBar extends StatefulWidget {
   const ScanBar({super.key});
@@ -22,6 +23,8 @@ class _ScanBarState extends State<ScanBar> {
   int _processed = 0;
   int _skipped = 0;
   String? _currentFile;
+  String? _errorMessage;
+  StreamSubscription<IndexingProgress>? _subscription;
 
   Future<void> _pickAndScan() async {
     final folderPath = await FilePicker.platform.getDirectoryPath();
@@ -32,30 +35,64 @@ class _ScanBarState extends State<ScanBar> {
       _processed = 0;
       _skipped = 0;
       _currentFile = null;
+      _errorMessage = null;
     });
 
-    final folderId = await database.addLibraryFolder(LibraryFoldersCompanion.insert(
-      identifier: folderPath,
-      displayName: folderPath.split(Platform.pathSeparator).last,
-      identifierType: FolderIdentifierType.filesystemPath,
-    ));
+    try {
+      final folderId = await database.addLibraryFolder(LibraryFoldersCompanion.insert(
+        identifier: folderPath,
+        displayName: folderPath.split(Platform.pathSeparator).last,
+        identifierType: FolderIdentifierType.filesystemPath,
+      ));
 
-    final indexer = LibraryIndexer(db: database);
+      final indexer = LibraryIndexer(db: database);
 
-    await for (final progress in indexer.indexFolder(folderPath)) {
+      _subscription = indexer.indexFolder(folderPath).listen(
+        (progress) {
+          if (!mounted) return;
+          setState(() {
+            _processed = progress.filesProcessed;
+            _skipped = progress.filesSkippedUnchanged;
+            _currentFile = progress.currentFile;
+          });
+        },
+        onDone: () async {
+          await database.markFolderScanned(folderId, DateTime.now());
+          if (!mounted) return;
+          setState(() {
+            _scanning = false;
+            _currentFile = null;
+          });
+        },
+        onError: (Object error) {
+          if (!mounted) return;
+          setState(() {
+            _scanning = false;
+            _currentFile = null;
+            _errorMessage = 'Scan failed: $error';
+          });
+        },
+      );
+    } catch (error) {
       setState(() {
-        _processed = progress.filesProcessed;
-        _skipped = progress.filesSkippedUnchanged;
-        _currentFile = progress.currentFile;
+        _scanning = false;
+        _errorMessage = 'Could not start scan: $error';
       });
     }
+  }
 
-    await database.markFolderScanned(folderId, DateTime.now());
-
+  void _cancelScan() {
+    _subscription?.cancel();
     setState(() {
       _scanning = false;
       _currentFile = null;
     });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -76,6 +113,14 @@ class _ScanBarState extends State<ScanBar> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
+          if (_scanning) ...[
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _cancelScan,
+              style: TextButton.styleFrom(foregroundColor: AppColors.accentRed),
+              child: const Text('Cancel'),
+            ),
+          ],
           const SizedBox(width: 16),
           if (_scanning)
             Expanded(
@@ -95,6 +140,14 @@ class _ScanBarState extends State<ScanBar> {
                       maxLines: 1,
                     ),
                 ],
+              ),
+            ),
+          if (_errorMessage != null)
+            Expanded(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: AppColors.accentRed, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
         ],

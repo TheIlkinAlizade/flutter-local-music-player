@@ -120,8 +120,12 @@ class AppDatabase extends _$AppDatabase {
     return into(coverArt).insertOnConflictUpdate(art);
   }
 
-  Future<int> addLibraryFolder(LibraryFoldersCompanion folder) {
-    return into(libraryFolders).insertOnConflictUpdate(folder);
+  Future<int> addLibraryFolder(LibraryFoldersCompanion folder) async {
+    final identifier = folder.identifier.value;
+    final existing = await (select(libraryFolders)..where((f) => f.identifier.equals(identifier)))
+        .getSingleOrNull();
+    if (existing != null) return existing.id;
+    return into(libraryFolders).insert(folder);
   }
 
   Future<List<LibraryFolder>> allLibraryFolders() => select(libraryFolders).get();
