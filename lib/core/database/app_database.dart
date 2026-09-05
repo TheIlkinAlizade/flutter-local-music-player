@@ -195,4 +195,19 @@ class AppDatabase extends _$AppDatabase {
         .toList());
   }
 
+  Stream<List<LibraryFolder>> watchLibraryFolders() => select(libraryFolders).watch();
+
+  Future<void> removeLibraryFolder(int folderId, String identifier) async {
+    await (delete(tracks)..where((t) => t.filePath.like('$identifier%'))).go();
+    await (delete(libraryFolders)..where((f) => f.id.equals(folderId))).go();
+  }
+
+  Future<void> resetLibrary() async {
+    await delete(playlistTracks).go();
+    await delete(playlists).go();
+    await delete(tracks).go();
+    await delete(coverArt).go();
+    await delete(libraryFolders).go();
+  }
+  
 }

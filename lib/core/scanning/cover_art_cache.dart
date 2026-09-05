@@ -51,6 +51,15 @@ class CoverArtCache {
     return CachedArt(hash: hash, cachedFilePath: filePath, mimeType: art.mimeType);
   }
 
+  Future<void> clearAll() async {
+    final dir = await _ensureCacheDir();
+    if (await dir.exists()) {
+      await for (final entity in dir.list()) {
+        await entity.delete();
+      }
+    }
+  }
+
   String _extensionFor(String mimeType) {
     switch (mimeType) {
       case 'image/png':

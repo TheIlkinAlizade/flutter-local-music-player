@@ -133,6 +133,17 @@ class Sidebar extends StatelessWidget {
                 ),
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Divider(height: 1, color: AppColors.border),
+            ),
+            NavItem(
+              icon: Icons.settings_rounded,
+              label: 'Settings',
+              selected: selected == NavDestination.settings,
+              collapsed: collapsed,
+              onTap: () => onSelect(NavDestination.settings),
+            ),
           ],
         ),
       ),

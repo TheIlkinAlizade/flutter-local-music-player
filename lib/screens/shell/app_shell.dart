@@ -6,6 +6,7 @@ import '../albums/albums_screen.dart';
 import '../artists/artist_detail_screen.dart';
 import '../artists/artists_screen.dart';
 import '../library/library_screen.dart';
+import '../settings/settings_screen.dart';
 import 'nav_destination.dart';
 import 'player_bar.dart';
 import 'sidebar.dart';
@@ -58,6 +59,8 @@ class _AppShellState extends State<AppShell> {
         return AlbumsScreen(
           onAlbumTap: (album, artist) => setState(() => _openAlbum = (album: album, artist: artist)),
         );
+      case NavDestination.settings:
+        return const SettingsScreen();
     }
   }
 

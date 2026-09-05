@@ -1,1 +1,1 @@
-enum NavDestination { library, favorites, artists, albums }
+enum NavDestination { library, favorites, artists, albums, settings }
