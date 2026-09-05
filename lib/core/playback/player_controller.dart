@@ -14,6 +14,9 @@ class PlayerController extends ChangeNotifier {
   bool _shuffleEnabled = false;
   RepeatMode _repeatMode = RepeatMode.off;
 
+  int _loadToken = 0;
+  bool _isLoading = false;
+
   PlayerController() {
     _player.playerStateStream.listen(_handlePlayerStateChange);
     _player.positionStream.listen((_) => notifyListeners());
@@ -50,19 +53,7 @@ class PlayerController extends ChangeNotifier {
 
   Future<void> seek(Duration position) => _player.seek(position);
 
-  Future<void> next() async {
-    if (_playOrder.isEmpty) return;
-    if (_orderPosition < _playOrder.length - 1) {
-      _orderPosition++;
-      await _loadCurrent(play: true);
-    } else if (_repeatMode == RepeatMode.all) {
-      _orderPosition = 0;
-      await _loadCurrent(play: true);
-    } else {
-      await _player.pause();
-      await _player.seek(Duration.zero);
-    }
-  }
+  Future<void> next() => _advance(forward: true, allowWrapWithoutRepeat: false);
 
   Future<void> previous() async {
     if (_playOrder.isEmpty) return;
@@ -106,21 +97,60 @@ class PlayerController extends ChangeNotifier {
     _orderPosition = keepTrackIndex >= 0 ? _playOrder.indexOf(keepTrackIndex) : 0;
   }
 
-  Future<void> _loadCurrent({required bool play}) async {
+  Future<void> _advance({required bool forward, required bool allowWrapWithoutRepeat, int attemptsLeft = 0}) async {
+    if (_playOrder.isEmpty) return;
+
+    final maxAttempts = attemptsLeft == 0 ? _playOrder.length : attemptsLeft;
+
+    if (_orderPosition < _playOrder.length - 1) {
+      _orderPosition++;
+    } else if (_repeatMode == RepeatMode.all || allowWrapWithoutRepeat) {
+      _orderPosition = 0;
+    } else {
+      await _player.pause();
+      await _player.seek(Duration.zero);
+      return;
+    }
+
+    final succeeded = await _loadCurrent(play: true);
+    if (!succeeded && maxAttempts > 1) {
+      await _advance(forward: forward, allowWrapWithoutRepeat: allowWrapWithoutRepeat, attemptsLeft: maxAttempts - 1);
+    }
+  }
+
+  Future<bool> _loadCurrent({required bool play}) async {
     final track = currentTrack;
-    if (track == null) return;
-    await _player.setFilePath(track.track.filePath);
-    if (play) await _player.play();
-    notifyListeners();
+    if (track == null) return false;
+
+    final myToken = ++_loadToken;
+    _isLoading = true;
+
+    bool success = false;
+    try {
+      await _player.setFilePath(track.track.filePath);
+      if (myToken != _loadToken) return false;
+      if (play) await _player.play();
+      success = true;
+    } catch (_) {
+      success = false;
+    } finally {
+      if (myToken == _loadToken) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+
+    return success;
   }
 
   void _handlePlayerStateChange(PlayerState state) {
+    if (_isLoading) return;
     notifyListeners();
     if (state.processingState == ProcessingState.completed) {
       if (_repeatMode == RepeatMode.one) {
         _player.seek(Duration.zero).then((_) => _player.play());
       } else {
-        next();
+        _advance(forward: true, allowWrapWithoutRepeat: false);
       }
     }
   }
