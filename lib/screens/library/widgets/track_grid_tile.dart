@@ -7,13 +7,17 @@ import 'cover_art_thumb.dart';
 class TrackGridTile extends StatelessWidget {
   final TrackWithArt data;
   final ValueChanged<bool> onFavoriteToggle;
+  final VoidCallback onTap;
 
-  const TrackGridTile({super.key, required this.data, required this.onFavoriteToggle});
-
+  const TrackGridTile({super.key, required this.data, required this.onFavoriteToggle, required this.onTap});
+  
   @override
   Widget build(BuildContext context) {
     final track = data.track;
-    return Column(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
@@ -53,6 +57,7 @@ class TrackGridTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ],
+    )
     );
   }
 }

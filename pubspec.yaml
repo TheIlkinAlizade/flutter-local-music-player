@@ -37,7 +37,8 @@ dependencies:
   metadata_god: ^1.1.0
   flutter_rust_bridge: 2.11.1
 
-  just_audio: ^0.9.40
+  just_audio: ^0.10.5
+  just_audio_windows: ^0.2.2
   just_audio_background: ^0.0.1-beta.13
 
   file_picker: ^8.1.2

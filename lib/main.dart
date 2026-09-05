@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/database/app_database.dart';
+import 'core/playback/player_controller.dart';
 import 'core/scanning/metadata_extractor.dart';
 import 'screens/shell/app_shell.dart';
 
 late final AppDatabase database;
 
+late final PlayerController playerController;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MetadataExtractor.initialize();
   database = AppDatabase();
+  playerController = PlayerController();
   runApp(const LocalMusicPlayerApp());
 }
 

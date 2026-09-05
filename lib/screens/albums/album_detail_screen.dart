@@ -58,6 +58,7 @@ class AlbumDetailScreen extends StatelessWidget {
                   return TrackListRow(
                     data: item,
                     onFavoriteToggle: (value) => database.setFavorite(item.track.id, value),
+                    onTap: () => playerController.playQueue(items, index),
                   );
                 },
               );

@@ -7,15 +7,16 @@ import 'cover_art_thumb.dart';
 class TrackListRow extends StatelessWidget {
   final TrackWithArt data;
   final ValueChanged<bool> onFavoriteToggle;
+  final VoidCallback onTap;
 
-  const TrackListRow({super.key, required this.data, required this.onFavoriteToggle});
+  const TrackListRow({super.key, required this.data, required this.onFavoriteToggle, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final track = data.track;
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: () {},
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
