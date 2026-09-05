@@ -14,6 +14,23 @@ class TrackWithArt {
   const TrackWithArt({required this.track, this.artPath});
 }
 
+class ArtistSummary {
+  final String artist;
+  final int trackCount;
+  final String? artPath;
+
+  const ArtistSummary({required this.artist, required this.trackCount, this.artPath});
+}
+
+class AlbumSummary {
+  final String album;
+  final String artist;
+  final int trackCount;
+  final String? artPath;
+
+  const AlbumSummary({required this.album, required this.artist, required this.trackCount, this.artPath});
+}
+
 @DriftDatabase(tables: [Tracks, CoverArt, Playlists, PlaylistTracks, LibraryFolders])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'local_music_player'));
@@ -66,6 +83,8 @@ class AppDatabase extends _$AppDatabase {
     bool ascending = true,
     String? searchQuery,
     bool favoritesOnly = false,
+    String? artistFilter,
+    String? albumFilter,
   }) {
     final query = select(tracks).join([
       leftOuterJoin(coverArt, coverArt.hash.equalsExp(tracks.artHash)),
@@ -73,6 +92,14 @@ class AppDatabase extends _$AppDatabase {
 
     if (favoritesOnly) {
       query.where(tracks.isFavorite.equals(true));
+    }
+
+    if (artistFilter != null) {
+      query.where(tracks.artist.equals(artistFilter));
+    }
+
+    if (albumFilter != null) {
+      query.where(tracks.album.equals(albumFilter));
     }
 
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
@@ -134,4 +161,38 @@ class AppDatabase extends _$AppDatabase {
     return (update(libraryFolders)..where((f) => f.id.equals(folderId)))
         .write(LibraryFoldersCompanion(lastScannedAt: Value(when)));
   }
+  
+    Stream<List<ArtistSummary>> watchArtists() {
+    final query = selectOnly(tracks)
+      ..addColumns([tracks.artist, tracks.id.count(), coverArt.cachedFilePath.max()])
+      ..join([leftOuterJoin(coverArt, coverArt.hash.equalsExp(tracks.artHash))])
+      ..groupBy([tracks.artist])
+      ..orderBy([OrderingTerm.asc(tracks.artist)]);
+
+    return query.watch().map((rows) => rows
+        .map((row) => ArtistSummary(
+              artist: row.read(tracks.artist)!,
+              trackCount: row.read(tracks.id.count())!,
+              artPath: row.read(coverArt.cachedFilePath.max()),
+            ))
+        .toList());
+  }
+
+  Stream<List<AlbumSummary>> watchAlbums() {
+    final query = selectOnly(tracks)
+      ..addColumns([tracks.album, tracks.artist, tracks.id.count(), coverArt.cachedFilePath.max()])
+      ..join([leftOuterJoin(coverArt, coverArt.hash.equalsExp(tracks.artHash))])
+      ..groupBy([tracks.album, tracks.artist])
+      ..orderBy([OrderingTerm.asc(tracks.album)]);
+
+    return query.watch().map((rows) => rows
+        .map((row) => AlbumSummary(
+              album: row.read(tracks.album)!,
+              artist: row.read(tracks.artist)!,
+              trackCount: row.read(tracks.id.count())!,
+              artPath: row.read(coverArt.cachedFilePath.max()),
+            ))
+        .toList());
+  }
+
 }

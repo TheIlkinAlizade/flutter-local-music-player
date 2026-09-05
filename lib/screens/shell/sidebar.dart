@@ -77,6 +77,20 @@ class Sidebar extends StatelessWidget {
               collapsed: collapsed,
               onTap: () => onSelect(NavDestination.favorites),
             ),
+            NavItem(
+              icon: Icons.person_rounded,
+              label: 'Artists',
+              selected: selected == NavDestination.artists,
+              collapsed: collapsed,
+              onTap: () => onSelect(NavDestination.artists),
+            ),
+            NavItem(
+              icon: Icons.album_rounded,
+              label: 'Albums',
+              selected: selected == NavDestination.albums,
+              collapsed: collapsed,
+              onTap: () => onSelect(NavDestination.albums),
+            ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Divider(height: 1, color: AppColors.border),
