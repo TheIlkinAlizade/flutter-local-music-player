@@ -4,7 +4,7 @@ import '../../core/database/app_database.dart';
 import '../../core/theme/app_colors.dart';
 import '../../main.dart';
 import '../../widgets/confirm_dialog.dart';
-import '../library/widgets/track_list_row.dart';
+import 'playlist_track_row.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   final int playlistId;
@@ -69,14 +69,22 @@ class PlaylistDetailScreen extends StatelessWidget {
                     );
                   }
 
-                  return ListView.builder(
+                  return ReorderableListView.builder(
+                    buildDefaultDragHandles: false,
                     itemCount: items.length,
+                    onReorder: (oldIndex, newIndex) {
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      final movedTrackId = items[oldIndex].track.id;
+                      database.reorderPlaylistTrack(playlistId, movedTrackId, newIndex);
+                    },
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      return TrackListRow(
+                      return PlaylistTrackRow(
+                        key: ValueKey(item.track.id),
                         data: item,
-                        onFavoriteToggle: (value) => database.setFavorite(item.track.id, value),
+                        index: index,
                         onTap: () => playerController.playQueue(items, index),
+                        onRemove: () => database.removeTrackFromPlaylist(playlistId, item.track.id),
                       );
                     },
                   );

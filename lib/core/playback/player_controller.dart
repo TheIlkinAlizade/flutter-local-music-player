@@ -154,6 +154,38 @@ class PlayerController extends ChangeNotifier {
       }
     }
   }
+  
+    List<TrackWithArt> get upcoming {
+    final result = <TrackWithArt>[];
+    for (var i = _orderPosition + 1; i < _playOrder.length; i++) {
+      result.add(_queue[_playOrder[i]]);
+    }
+    return result;
+  }
+
+  void removeUpcomingAt(int upcomingIndex) {
+    final actualIndex = _orderPosition + 1 + upcomingIndex;
+    if (actualIndex < 0 || actualIndex >= _playOrder.length) return;
+    _playOrder.removeAt(actualIndex);
+    notifyListeners();
+  }
+
+  void reorderUpcoming(int oldIndex, int newIndex) {
+    final base = _orderPosition + 1;
+    final actualOld = base + oldIndex;
+    final actualNew = base + newIndex;
+    if (actualOld < 0 || actualOld >= _playOrder.length) return;
+    final item = _playOrder.removeAt(actualOld);
+    _playOrder.insert(actualNew.clamp(base, _playOrder.length), item);
+    notifyListeners();
+  }
+
+  Future<void> playUpcomingAt(int upcomingIndex) async {
+    final actualIndex = _orderPosition + 1 + upcomingIndex;
+    if (actualIndex < 0 || actualIndex >= _playOrder.length) return;
+    _orderPosition = actualIndex;
+    await _loadCurrent(play: true);
+  }
 
   @override
   void dispose() {

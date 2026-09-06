@@ -28,7 +28,7 @@ class AlbumsScreen extends StatelessWidget {
             maxCrossAxisExtent: 160,
             mainAxisSpacing: 20,
             crossAxisSpacing: 16,
-            childAspectRatio: 0.78,
+            childAspectRatio: 0.72,
           ),
           itemCount: albums.length,
           itemBuilder: (context, index) {

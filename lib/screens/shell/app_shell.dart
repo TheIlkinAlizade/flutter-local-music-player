@@ -10,6 +10,7 @@ import '../artists/artist_detail_screen.dart';
 import '../artists/artists_screen.dart';
 import '../library/library_screen.dart';
 import '../playlists/playlist_detail_screen.dart';
+import '../queue/queue_panel.dart';
 import '../settings/settings_screen.dart';
 import 'nav_destination.dart';
 import 'player_bar.dart';
@@ -24,6 +25,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   bool _collapsed = false;
+  bool _queueOpen = false;
   NavDestination _selected = NavDestination.library;
   String? _openArtist;
   ({String album, String artist})? _openAlbum;
@@ -118,10 +120,14 @@ class _AppShellState extends State<AppShell> {
                     child: _buildContent(),
                   ),
                 ),
+                if (_queueOpen) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
               ],
             ),
           ),
-          const PlayerBar(),
+          PlayerBar(
+            queueOpen: _queueOpen,
+            onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
+          ),
         ],
       ),
     );

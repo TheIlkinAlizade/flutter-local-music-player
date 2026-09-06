@@ -8,8 +8,10 @@ import '../library/widgets/cover_art_thumb.dart';
 import '../../widgets/glass_panel.dart';
 
 class PlayerBar extends StatelessWidget {
-  const PlayerBar({super.key});
+  final bool queueOpen;
+  final VoidCallback onToggleQueue;
 
+  const PlayerBar({super.key, required this.queueOpen, required this.onToggleQueue});
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
@@ -150,7 +152,17 @@ class PlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Expanded(flex: 2, child: SizedBox()),
+                  Expanded(
+                    flex: 2,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: Icon(Icons.queue_music_rounded, size: 20),
+                        color: queueOpen ? AppColors.accentBlue : AppColors.textDisabled,
+                        onPressed: onToggleQueue,
+                      ),
+                    ),
+                  ),
                 ],
               );
             },
