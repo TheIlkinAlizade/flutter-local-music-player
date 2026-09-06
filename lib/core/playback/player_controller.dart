@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:just_audio/just_audio.dart';
+import '../theme/palette_extractor.dart';
 
 import '../database/app_database.dart';
 
@@ -121,7 +123,9 @@ class PlayerController extends ChangeNotifier {
   Future<bool> _loadCurrent({required bool play}) async {
     final track = currentTrack;
     if (track == null) return false;
-
+    
+    _updatePalette(track.artPath);
+    
     final myToken = ++_loadToken;
     _isLoading = true;
 
@@ -185,6 +189,15 @@ class PlayerController extends ChangeNotifier {
     if (actualIndex < 0 || actualIndex >= _playOrder.length) return;
     _orderPosition = actualIndex;
     await _loadCurrent(play: true);
+  }
+
+  List<Color> _currentPalette = PaletteExtractor.fallback;
+  List<Color> get currentPalette => _currentPalette;
+
+  Future<void> _updatePalette(String? artPath) async {
+    final colors = await PaletteExtractor.extract(artPath);
+    _currentPalette = colors;
+    notifyListeners();
   }
 
   @override

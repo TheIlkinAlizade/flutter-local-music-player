@@ -12,6 +12,7 @@ import '../library/library_screen.dart';
 import '../playlists/playlist_detail_screen.dart';
 import '../queue/queue_panel.dart';
 import '../settings/settings_screen.dart';
+import '../../widgets/dynamic_background.dart';
 import 'nav_destination.dart';
 import 'player_bar.dart';
 import 'sidebar.dart';
@@ -86,50 +87,52 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                StreamBuilder<List<Playlist>>(
-                  stream: database.watchPlaylists(),
-                  builder: (context, snapshot) {
-                    final playlists = snapshot.data ?? [];
-                    return Sidebar(
-                      collapsed: _collapsed,
-                      selected: _selected,
-                      onSelect: _selectDestination,
-                      onToggleCollapsed: () => setState(() => _collapsed = !_collapsed),
-                      onCreatePlaylist: _createPlaylist,
-                      playlists: playlists,
-                      openPlaylistId: _openPlaylistId,
-                      onPlaylistTap: (id) => setState(() {
-                        _openPlaylistId = id;
-                        _openArtist = null;
-                        _openAlbum = null;
-                      }),
-                    );
-                  },
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
-                    child: _buildContent(),
+    return DynamicBackground(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Column(
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  StreamBuilder<List<Playlist>>(
+                    stream: database.watchPlaylists(),
+                    builder: (context, snapshot) {
+                      final playlists = snapshot.data ?? [];
+                      return Sidebar(
+                        collapsed: _collapsed,
+                        selected: _selected,
+                        onSelect: _selectDestination,
+                        onToggleCollapsed: () => setState(() => _collapsed = !_collapsed),
+                        onCreatePlaylist: _createPlaylist,
+                        playlists: playlists,
+                        openPlaylistId: _openPlaylistId,
+                        onPlaylistTap: (id) => setState(() {
+                          _openPlaylistId = id;
+                          _openArtist = null;
+                          _openAlbum = null;
+                        }),
+                      );
+                    },
                   ),
-                ),
-                if (_queueOpen) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
-              ],
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
+                      child: _buildContent(),
+                    ),
+                  ),
+                  if (_queueOpen) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
+                ],
+              ),
             ),
-          ),
-          PlayerBar(
-            queueOpen: _queueOpen,
-            onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
-          ),
-        ],
-      ),
+            PlayerBar(
+              queueOpen: _queueOpen,
+              onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
+            ),
+          ],
+        ),
+      )
     );
   }
 }
