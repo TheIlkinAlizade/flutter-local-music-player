@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/database/app_database.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../widgets/add_to_playlist_button.dart';
 import 'cover_art_thumb.dart';
 
 class TrackGridTile extends StatelessWidget {
@@ -40,6 +41,11 @@ class TrackGridTile extends StatelessWidget {
                   color: track.isFavorite ? AppColors.accentYellow : Colors.white70,
                 ),
               ),
+            ),
+            Positioned(
+              top: 4,
+              left: 4,
+              child: AddToPlaylistButton(trackId: track.id),
             ),
           ],
         ),
