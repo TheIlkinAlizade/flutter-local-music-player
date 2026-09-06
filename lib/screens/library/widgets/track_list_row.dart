@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/database/app_database.dart';
 import '../../../../../core/theme/app_colors.dart';
+import '../../../widgets/add_to_playlist_button.dart';
 import 'cover_art_thumb.dart';
 
 class TrackListRow extends StatelessWidget {
@@ -43,6 +44,8 @@ class TrackListRow extends StatelessWidget {
               child: Text(_formatDuration(track.durationMs), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12), textAlign: TextAlign.right),
             ),
             const SizedBox(width: 12),
+            AddToPlaylistButton(trackId: track.id),
+            const SizedBox(width: 4),            
             GestureDetector(
               onTap: () => onFavoriteToggle(!track.isFavorite),
               child: Icon(

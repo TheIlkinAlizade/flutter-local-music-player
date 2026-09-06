@@ -209,5 +209,67 @@ class AppDatabase extends _$AppDatabase {
     await delete(coverArt).go();
     await delete(libraryFolders).go();
   }
+
+    Future<void> removeTrackFromPlaylist(int playlistId, int trackId) async {
+    await (delete(playlistTracks)
+          ..where((pt) => pt.playlistId.equals(playlistId) & pt.trackId.equals(trackId)))
+        .go();
+  }
+
+  Future<void> deletePlaylist(int playlistId) async {
+    await (delete(playlistTracks)..where((pt) => pt.playlistId.equals(playlistId))).go();
+    await (delete(playlists)..where((p) => p.id.equals(playlistId))).go();
+  }
+
+  Future<void> reorderPlaylistTrack(int playlistId, int trackId, int newPosition) async {
+    final rows = await (select(playlistTracks)
+          ..where((pt) => pt.playlistId.equals(playlistId))
+          ..orderBy([(pt) => OrderingTerm.asc(pt.position)]))
+        .get();
+
+    final withoutMoved = rows.where((r) => r.trackId != trackId).toList();
+    final movedRow = rows.firstWhere((r) => r.trackId == trackId);
+    withoutMoved.insert(newPosition.clamp(0, withoutMoved.length), movedRow);
+
+    for (var i = 0; i < withoutMoved.length; i++) {
+      await (update(playlistTracks)..where((pt) => pt.id.equals(withoutMoved[i].id)))
+          .write(PlaylistTracksCompanion(position: Value(i)));
+    }
+  }
   
+  Stream<List<TrackWithArt>> watchPlaylistTracksWithArt(int playlistId) {
+    final query = select(tracks).join([
+      innerJoin(playlistTracks, playlistTracks.trackId.equalsExp(tracks.id)),
+      leftOuterJoin(coverArt, coverArt.hash.equalsExp(tracks.artHash)),
+    ])
+      ..where(playlistTracks.playlistId.equals(playlistId))
+      ..orderBy([OrderingTerm.asc(playlistTracks.position)]);
+
+    return query.watch().map((rows) => rows
+        .map((row) => TrackWithArt(
+              track: row.readTable(tracks),
+              artPath: row.readTableOrNull(coverArt)?.cachedFilePath,
+            ))
+        .toList());
+  }
+  
+  Future<int> createPlaylist(String name) {
+    return into(playlists).insert(PlaylistsCompanion.insert(name: name));
+  }
+
+  Future<void> addTrackToPlaylist(int playlistId, int trackId) async {
+    final maxPosition = await (selectOnly(playlistTracks)
+          ..addColumns([playlistTracks.position.max()])
+          ..where(playlistTracks.playlistId.equals(playlistId)))
+        .map((row) => row.read(playlistTracks.position.max()))
+        .getSingleOrNull();
+
+    await into(playlistTracks).insert(PlaylistTracksCompanion.insert(
+      playlistId: playlistId,
+      trackId: trackId,
+      position: (maxPosition ?? -1) + 1,
+    ));
+  }
+
+  Stream<List<Playlist>> watchPlaylists() => select(playlists).watch();
 }

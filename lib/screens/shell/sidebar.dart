@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/glass_panel.dart';
 import '../../widgets/nav_item.dart';
+import '../../core/database/app_database.dart';
 import 'nav_destination.dart';
 
 class Sidebar extends StatelessWidget {
@@ -11,7 +12,9 @@ class Sidebar extends StatelessWidget {
   final ValueChanged<NavDestination> onSelect;
   final VoidCallback onToggleCollapsed;
   final VoidCallback onCreatePlaylist;
-  final List<String> playlistNames;
+  final List<Playlist> playlists;
+  final int? openPlaylistId;
+  final ValueChanged<int> onPlaylistTap;
 
   const Sidebar({
     super.key,
@@ -20,7 +23,9 @@ class Sidebar extends StatelessWidget {
     required this.onSelect,
     required this.onToggleCollapsed,
     required this.onCreatePlaylist,
-    required this.playlistNames,
+    required this.playlists,
+    required this.openPlaylistId,
+    required this.onPlaylistTap,
   });
 
   @override
@@ -123,14 +128,17 @@ class Sidebar extends StatelessWidget {
             Expanded(
               child: ListView.builder(
                 padding: EdgeInsets.zero,
-                itemCount: playlistNames.length,
-                itemBuilder: (context, index) => NavItem(
-                  icon: Icons.queue_music_rounded,
-                  label: playlistNames[index],
-                  selected: false,
-                  collapsed: collapsed,
-                  onTap: () {},
-                ),
+                itemCount: playlists.length,
+                itemBuilder: (context, index) {
+                  final playlist = playlists[index];
+                  return NavItem(
+                    icon: Icons.queue_music_rounded,
+                    label: playlist.name,
+                    selected: openPlaylistId == playlist.id,
+                    collapsed: collapsed,
+                    onTap: () => onPlaylistTap(playlist.id),
+                  );
+                },
               ),
             ),
             const Padding(
