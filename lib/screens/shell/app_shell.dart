@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/database/app_database.dart';
-import '../../core/theme/app_colors.dart';
 import '../../main.dart';
 import '../../widgets/text_input_dialog.dart';
 import '../albums/album_detail_screen.dart';
@@ -89,7 +88,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return DynamicBackground(
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         body: Column(
           children: [
             Expanded(

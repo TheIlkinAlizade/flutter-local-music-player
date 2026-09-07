@@ -6,47 +6,98 @@ import '../main.dart';
 class DynamicBackground extends StatelessWidget {
   final Widget child;
 
-  const DynamicBackground({super.key, required this.child});
+  const DynamicBackground({
+    super.key,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
+      fit: StackFit.expand,
       children: [
-        const Positioned.fill(child: ColoredBox(color: AppColors.background)),
+        // Base background
+        const ColoredBox(
+          color: AppColors.background,
+        ),
+
+        // Dynamic artwork glows
         AnimatedBuilder(
           animation: playerController,
           builder: (context, _) {
             final palette = playerController.currentPalette;
+
+            // IMPORTANT: don't assume palette has 3 colors
+            if (palette.length < 3) {
+              return const SizedBox.shrink();
+            }
+
             return Stack(
+              fit: StackFit.expand,
               children: [
-                _glow(palette[0], top: -140, left: -120, size: 460),
-                _glow(palette[1], top: -80, right: -160, size: 420),
-                _glow(palette[2], bottom: -160, left: 140, size: 480),
+                _buildGlow(
+                  palette[0],
+                  top: -180,
+                  left: -180,
+                  size: 600,
+                ),
+
+                _buildGlow(
+                  palette[1],
+                  top: -120,
+                  right: -200,
+                  size: 550,
+                ),
+
+                _buildGlow(
+                  palette[2],
+                  bottom: -220,
+                  left: 100,
+                  size: 600,
+                ),
               ],
             );
           },
         ),
+
+        // Application UI
         child,
       ],
     );
   }
 
-  Widget _glow(Color color, {double? top, double? bottom, double? left, double? right, required double size}) {
+  Widget _buildGlow(
+    Color color, {
+    double? top,
+    double? bottom,
+    double? left,
+    double? right,
+    required double size,
+  }) {
     return Positioned(
       top: top,
       bottom: bottom,
       left: left,
       right: right,
+      width: size,
+      height: size,
       child: IgnorePointer(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 900),
-          curve: Curves.easeInOut,
-          width: size,
-          height: size,
+        child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
-              colors: [color.withValues(alpha: 0.55), color.withValues(alpha: 0.0)],
+              center: Alignment.center,
+              radius: 0.5,
+              colors: [
+                color.withValues(alpha: 0.75),
+                color.withValues(alpha: 0.30),
+                color.withValues(alpha: 0.0),
+              ],
+              stops: const [
+                0.0,
+                0.35,
+                1.0,
+              ],
             ),
           ),
         ),
