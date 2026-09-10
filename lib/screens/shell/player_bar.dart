@@ -7,18 +7,22 @@ import '../../main.dart';
 import '../library/widgets/cover_art_thumb.dart';
 import '../../widgets/glass_panel.dart';
 
+enum PlayerBarMode { full, compact, mini }
+
 class PlayerBar extends StatelessWidget {
+  final PlayerBarMode mode;
   final bool queueOpen;
   final VoidCallback onToggleQueue;
 
-  const PlayerBar({super.key, required this.queueOpen, required this.onToggleQueue});
+  const PlayerBar({super.key, required this.mode, required this.queueOpen, required this.onToggleQueue});
+
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -36,33 +40,76 @@ class PlayerBar extends StatelessWidget {
               final maxMs = duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1.0;
               final valueMs = position.inMilliseconds.clamp(0, maxMs.toInt()).toDouble();
 
+              if (mode == PlayerBarMode.mini) {
+                return Row(
+                  children: [
+                    CoverArtThumb(artPath: track?.artPath, size: 56, borderRadius: BorderRadius.circular(8)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        track?.track.title ?? 'No track playing',
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_previous_rounded, size: 20, color: AppColors.textSecondary),
+                      onPressed: playerController.previous,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    GestureDetector(
+                      onTap: playerController.togglePlayPause,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(color: AppColors.accentBlue, shape: BoxShape.circle),
+                        child: Icon(
+                          playerController.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.skip_next_rounded, size: 20, color: AppColors.textSecondary),
+                      onPressed: playerController.next,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                );
+              }
+
+              final compact = mode == PlayerBarMode.compact;
+
               return Row(
                 children: [
                   CoverArtThumb(artPath: track?.artPath, size: 56, borderRadius: BorderRadius.circular(8)),
                   const SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          track?.track.title ?? 'No track playing',
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          track?.track.artist ?? '—',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                  if (!compact)
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            track?.track.title ?? 'No track playing',
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            track?.track.artist ?? '—',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
+                  if (!compact) const SizedBox(width: 16),
                   Expanded(
                     flex: 5,
                     child: Column(
@@ -72,15 +119,15 @@ class PlayerBar extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.shuffle_rounded, size: 18),
+                              icon: const Icon(Icons.shuffle_rounded, size: 18),
                               color: playerController.shuffleEnabled ? AppColors.accentBlue : AppColors.textDisabled,
                               onPressed: playerController.toggleShuffle,
-                              visualDensity: VisualDensity.compact
+                              visualDensity: VisualDensity.compact,
                             ),
                             IconButton(
                               icon: const Icon(Icons.skip_previous_rounded, size: 22, color: AppColors.textSecondary),
                               onPressed: playerController.previous,
-                              visualDensity: VisualDensity.compact
+                              visualDensity: VisualDensity.compact,
                             ),
                             GestureDetector(
                               onTap: playerController.togglePlayPause,
@@ -98,7 +145,7 @@ class PlayerBar extends StatelessWidget {
                             IconButton(
                               icon: const Icon(Icons.skip_next_rounded, size: 22, color: AppColors.textSecondary),
                               onPressed: playerController.next,
-                              visualDensity: VisualDensity.compact
+                              visualDensity: VisualDensity.compact,
                             ),
                             IconButton(
                               icon: Icon(
@@ -111,7 +158,7 @@ class PlayerBar extends StatelessWidget {
                                   ? AppColors.textDisabled
                                   : AppColors.accentBlue,
                               onPressed: playerController.cycleRepeatMode,
-                              visualDensity: VisualDensity.compact
+                              visualDensity: VisualDensity.compact,
                             ),
                           ],
                         ),
@@ -152,17 +199,18 @@ class PlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        icon: Icon(Icons.queue_music_rounded, size: 20),
-                        color: queueOpen ? AppColors.accentBlue : AppColors.textDisabled,
-                        onPressed: onToggleQueue,
+                  if (!compact)
+                    Expanded(
+                      flex: 2,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          icon: Icon(Icons.queue_music_rounded, size: 20),
+                          color: queueOpen ? AppColors.accentBlue : AppColors.textDisabled,
+                          onPressed: onToggleQueue,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               );
             },

@@ -89,49 +89,61 @@ class _AppShellState extends State<AppShell> {
     return DynamicBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Column(
-          children: [
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  StreamBuilder<List<Playlist>>(
-                    stream: database.watchPlaylists(),
-                    builder: (context, snapshot) {
-                      final playlists = snapshot.data ?? [];
-                      return Sidebar(
-                        collapsed: _collapsed,
-                        selected: _selected,
-                        onSelect: _selectDestination,
-                        onToggleCollapsed: () => setState(() => _collapsed = !_collapsed),
-                        onCreatePlaylist: _createPlaylist,
-                        playlists: playlists,
-                        openPlaylistId: _openPlaylistId,
-                        onPlaylistTap: (id) => setState(() {
-                          _openPlaylistId = id;
-                          _openArtist = null;
-                          _openAlbum = null;
-                        }),
-                      );
-                    },
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final effectiveCollapsed = _collapsed || width < 900;
+            final showQueue = _queueOpen && width >= 760;
+            final playerMode = width < 480
+                ? PlayerBarMode.mini
+                : (width < 700 ? PlayerBarMode.compact : PlayerBarMode.full);
+
+            return Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      StreamBuilder<List<Playlist>>(
+                        stream: database.watchPlaylists(),
+                        builder: (context, snapshot) {
+                          final playlists = snapshot.data ?? [];
+                          return Sidebar(
+                            collapsed: effectiveCollapsed,
+                            selected: _selected,
+                            onSelect: _selectDestination,
+                            onToggleCollapsed: () => setState(() => _collapsed = !_collapsed),
+                            onCreatePlaylist: _createPlaylist,
+                            playlists: playlists,
+                            openPlaylistId: _openPlaylistId,
+                            onPlaylistTap: (id) => setState(() {
+                              _openPlaylistId = id;
+                              _openArtist = null;
+                              _openAlbum = null;
+                            }),
+                          );
+                        },
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
+                          child: _buildContent(),
+                        ),
+                      ),
+                      if (showQueue) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
+                    ],
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
-                      child: _buildContent(),
-                    ),
-                  ),
-                  if (_queueOpen) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
-                ],
-              ),
-            ),
-            PlayerBar(
-              queueOpen: _queueOpen,
-              onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
-            ),
-          ],
+                ),
+                PlayerBar(
+                  mode: playerMode,
+                  queueOpen: _queueOpen,
+                  onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
+                ),
+              ],
+            );
+          },
         ),
-      )
+      ),
     );
   }
 }

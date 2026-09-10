@@ -63,7 +63,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     maxCrossAxisExtent: 170,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.72,
+                    childAspectRatio: 0.68,
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
