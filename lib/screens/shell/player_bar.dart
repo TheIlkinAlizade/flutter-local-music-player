@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide RepeatMode;
 
-
 import '../../core/playback/player_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../main.dart';
@@ -13,8 +12,15 @@ class PlayerBar extends StatelessWidget {
   final PlayerBarMode mode;
   final bool queueOpen;
   final VoidCallback onToggleQueue;
+  final VoidCallback onToggleMini;
 
-  const PlayerBar({super.key, required this.mode, required this.queueOpen, required this.onToggleQueue});
+  const PlayerBar({
+    super.key,
+    required this.mode,
+    required this.queueOpen,
+    required this.onToggleQueue,
+    required this.onToggleMini,
+  });
 
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
@@ -22,7 +28,7 @@ class PlayerBar extends StatelessWidget {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -74,6 +80,11 @@ class PlayerBar extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.skip_next_rounded, size: 20, color: AppColors.textSecondary),
                       onPressed: playerController.next,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 20, color: AppColors.textSecondary),
+                      onPressed: onToggleMini,
                       visualDensity: VisualDensity.compact,
                     ),
                   ],
@@ -199,18 +210,28 @@ class PlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (!compact)
-                    Expanded(
-                      flex: 2,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: Icon(Icons.queue_music_rounded, size: 20),
-                          color: queueOpen ? AppColors.accentBlue : AppColors.textDisabled,
-                          onPressed: onToggleQueue,
-                        ),
+                  Expanded(
+                    flex: 2,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!compact)
+                            IconButton(
+                              icon: Icon(Icons.queue_music_rounded, size: 20),
+                              color: queueOpen ? AppColors.accentBlue : AppColors.textDisabled,
+                              onPressed: onToggleQueue,
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.textSecondary),
+                            onPressed: onToggleMini,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               );
             },

@@ -26,6 +26,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   bool _collapsed = false;
   bool _queueOpen = false;
+  bool _playerManualMini = false;
   NavDestination _selected = NavDestination.library;
   String? _openArtist;
   ({String album, String artist})? _openAlbum;
@@ -94,9 +95,10 @@ class _AppShellState extends State<AppShell> {
             final width = constraints.maxWidth;
             final effectiveCollapsed = _collapsed || width < 900;
             final showQueue = _queueOpen && width >= 760;
-            final playerMode = width < 480
+            final autoMode = width < 480
                 ? PlayerBarMode.mini
                 : (width < 700 ? PlayerBarMode.compact : PlayerBarMode.full);
+            final playerMode = _playerManualMini ? PlayerBarMode.mini : autoMode;
 
             return Column(
               children: [
@@ -138,6 +140,7 @@ class _AppShellState extends State<AppShell> {
                   mode: playerMode,
                   queueOpen: _queueOpen,
                   onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
+                  onToggleMini: () => setState(() => _playerManualMini = !_playerManualMini),
                 ),
               ],
             );

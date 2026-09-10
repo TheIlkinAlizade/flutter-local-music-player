@@ -68,60 +68,64 @@ class QueuePanel extends StatelessWidget {
                       ? const Center(
                           child: Text('Nothing queued next', style: TextStyle(color: AppColors.textDisabled, fontSize: 12)),
                         )
-                      : ReorderableListView.builder(
-                          buildDefaultDragHandles: false,
-                          itemCount: upcoming.length,
-                          onReorder: (oldIndex, newIndex) {
-                            if (newIndex > oldIndex) newIndex -= 1;
-                            playerController.reorderUpcoming(oldIndex, newIndex);
-                          },
-                          itemBuilder: (context, index) {
-                            final item = upcoming[index];
-                            return Padding(
-                              key: ValueKey(index),
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  ReorderableDragStartListener(
-                                    index: index,
-                                    child: const Padding(
-                                      padding: EdgeInsets.only(right: 8),
-                                      child: Icon(Icons.drag_indicator_rounded, size: 16, color: AppColors.textDisabled),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => playerController.playUpcomingAt(index),
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Row(
-                                        children: [
-                                          CoverArtThumb(artPath: item.artPath, size: 32, borderRadius: BorderRadius.circular(6)),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(item.track.title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                                Text(item.track.artist, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
+                      : ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                          child: ReorderableListView.builder(
+                            padding: const EdgeInsets.only(right: 8),
+                            buildDefaultDragHandles: false,
+                            itemCount: upcoming.length,
+                            onReorder: (oldIndex, newIndex) {
+                              if (newIndex > oldIndex) newIndex -= 1;
+                              playerController.reorderUpcoming(oldIndex, newIndex);
+                            },
+                            itemBuilder: (context, index) {
+                              final item = upcoming[index];
+                              return Padding(
+                                key: ValueKey(index),
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    ReorderableDragStartListener(
+                                      index: index,
+                                      child: const Padding(
+                                        padding: EdgeInsets.only(right: 8),
+                                        child: Icon(Icons.drag_indicator_rounded, size: 16, color: AppColors.textDisabled),
                                       ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close_rounded, size: 14, color: AppColors.textDisabled),
-                                    onPressed: () => playerController.removeUpcomingAt(index),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () => playerController.playUpcomingAt(index),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Row(
+                                          children: [
+                                            CoverArtThumb(artPath: item.artPath, size: 32, borderRadius: BorderRadius.circular(6)),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(item.track.title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                  Text(item.track.artist, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.close_rounded, size: 14, color: AppColors.textDisabled),
+                                      onPressed: () => playerController.removeUpcomingAt(index),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                         ),
                 ),
               ],
