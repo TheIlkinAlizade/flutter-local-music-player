@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart' hide RepeatMode;
 
-import '../../core/playback/player_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../main.dart';
 
