@@ -6,20 +6,20 @@ import '../../main.dart';
 import '../library/widgets/cover_art_thumb.dart';
 import '../../widgets/glass_panel.dart';
 
-enum PlayerBarMode { full, compact, mini }
+enum PlayerBarMode { full, compact }
 
 class PlayerBar extends StatelessWidget {
   final PlayerBarMode mode;
   final bool queueOpen;
   final VoidCallback onToggleQueue;
-  final VoidCallback onToggleMini;
+  final VoidCallback onEnterMini;
 
   const PlayerBar({
     super.key,
     required this.mode,
     required this.queueOpen,
     required this.onToggleQueue,
-    required this.onToggleMini,
+    required this.onEnterMini,
   });
 
   String _formatDuration(Duration duration) {
@@ -45,52 +45,6 @@ class PlayerBar extends StatelessWidget {
               final duration = playerController.duration ?? Duration.zero;
               final maxMs = duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1.0;
               final valueMs = position.inMilliseconds.clamp(0, maxMs.toInt()).toDouble();
-
-              if (mode == PlayerBarMode.mini) {
-                return Row(
-                  children: [
-                    CoverArtThumb(artPath: track?.artPath, size: 56, borderRadius: BorderRadius.circular(8)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        track?.track.title ?? 'No track playing',
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous_rounded, size: 20, color: AppColors.textSecondary),
-                      onPressed: playerController.previous,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    GestureDetector(
-                      onTap: playerController.togglePlayPause,
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: const BoxDecoration(color: AppColors.accentBlue, shape: BoxShape.circle),
-                        child: Icon(
-                          playerController.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                          color: Colors.black,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next_rounded, size: 20, color: AppColors.textSecondary),
-                      onPressed: playerController.next,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 20, color: AppColors.textSecondary),
-                      onPressed: onToggleMini,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                );
-              }
-
               final compact = mode == PlayerBarMode.compact;
 
               return Row(
@@ -224,8 +178,8 @@ class PlayerBar extends StatelessWidget {
                               onPressed: onToggleQueue,
                             ),
                           IconButton(
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.textSecondary),
-                            onPressed: onToggleMini,
+                            icon: const Icon(Icons.close_fullscreen_rounded, size: 18, color: AppColors.textSecondary),
+                            onPressed: onEnterMini,
                             visualDensity: VisualDensity.compact,
                           ),
                         ],

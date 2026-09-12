@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../core/database/app_database.dart';
 import '../../main.dart';
@@ -12,6 +13,7 @@ import '../playlists/playlist_detail_screen.dart';
 import '../queue/queue_panel.dart';
 import '../settings/settings_screen.dart';
 import '../../widgets/dynamic_background.dart';
+import 'mini_player_view.dart';
 import 'nav_destination.dart';
 import 'player_bar.dart';
 import 'sidebar.dart';
@@ -26,7 +28,8 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   bool _collapsed = false;
   bool _queueOpen = false;
-  bool _playerManualMini = false;
+  bool _miniPlayerActive = false;
+  Size? _normalWindowSize;
   NavDestination _selected = NavDestination.library;
   String? _openArtist;
   ({String album, String artist})? _openAlbum;
@@ -39,6 +42,19 @@ class _AppShellState extends State<AppShell> {
       _openAlbum = null;
       _openPlaylistId = null;
     });
+  }
+
+  Future<void> _enterMiniPlayer() async {
+    _normalWindowSize = await windowManager.getSize();
+    await windowManager.setResizable(false);
+    await windowManager.setSize(const Size(320, 320));
+    setState(() => _miniPlayerActive = true);
+  }
+
+  Future<void> _exitMiniPlayer() async {
+    setState(() => _miniPlayerActive = false);
+    await windowManager.setResizable(true);
+    await windowManager.setSize(_normalWindowSize ?? const Size(1280, 800));
   }
 
   Future<void> _createPlaylist() async {
@@ -87,6 +103,10 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (_miniPlayerActive) {
+      return MiniPlayerView(onExpand: _exitMiniPlayer);
+    }
+
     return DynamicBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -95,10 +115,7 @@ class _AppShellState extends State<AppShell> {
             final width = constraints.maxWidth;
             final effectiveCollapsed = _collapsed || width < 900;
             final showQueue = _queueOpen && width >= 760;
-            final autoMode = width < 480
-                ? PlayerBarMode.mini
-                : (width < 700 ? PlayerBarMode.compact : PlayerBarMode.full);
-            final playerMode = _playerManualMini ? PlayerBarMode.mini : autoMode;
+            final barMode = width < 700 ? PlayerBarMode.compact : PlayerBarMode.full;
 
             return Column(
               children: [
@@ -137,10 +154,10 @@ class _AppShellState extends State<AppShell> {
                   ),
                 ),
                 PlayerBar(
-                  mode: playerMode,
+                  mode: barMode,
                   queueOpen: _queueOpen,
                   onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
-                  onToggleMini: () => setState(() => _playerManualMini = !_playerManualMini),
+                  onEnterMini: _enterMiniPlayer,
                 ),
               ],
             );
