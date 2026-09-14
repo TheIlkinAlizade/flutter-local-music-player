@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -35,6 +37,9 @@ class _AppShellState extends State<AppShell> {
   ({String album, String artist})? _openAlbum;
   int? _openPlaylistId;
 
+  bool get _isDesktop =>
+      Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
   void _selectDestination(NavDestination destination) {
     setState(() {
       _selected = destination;
@@ -45,16 +50,35 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _enterMiniPlayer() async {
+    if (!_isDesktop) {
+      return;
+    }
+
     _normalWindowSize = await windowManager.getSize();
     await windowManager.setResizable(false);
     await windowManager.setSize(const Size(320, 320));
-    setState(() => _miniPlayerActive = true);
+
+    if (mounted) {
+      setState(() => _miniPlayerActive = true);
+    }
   }
 
   Future<void> _exitMiniPlayer() async {
-    setState(() => _miniPlayerActive = false);
+    if (!_isDesktop) {
+      if (mounted) {
+        setState(() => _miniPlayerActive = false);
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _miniPlayerActive = false);
+    }
+
     await windowManager.setResizable(true);
-    await windowManager.setSize(_normalWindowSize ?? const Size(1280, 800));
+    await windowManager.setSize(
+      _normalWindowSize ?? const Size(1280, 800),
+    );
   }
 
   Future<void> _createPlaylist() async {
@@ -63,6 +87,7 @@ class _AppShellState extends State<AppShell> {
       title: 'New Playlist',
       hintText: 'Playlist name',
     );
+
     if (name != null && name.isNotEmpty) {
       await database.createPlaylist(name);
     }
@@ -70,7 +95,10 @@ class _AppShellState extends State<AppShell> {
 
   Widget _buildContent() {
     if (_openArtist != null) {
-      return ArtistDetailScreen(artist: _openArtist!, onBack: () => setState(() => _openArtist = null));
+      return ArtistDetailScreen(
+        artist: _openArtist!,
+        onBack: () => setState(() => _openArtist = null),
+      );
     }
 
     if (_openAlbum != null) {
@@ -82,20 +110,38 @@ class _AppShellState extends State<AppShell> {
     }
 
     if (_openPlaylistId != null) {
-      return PlaylistDetailScreen(playlistId: _openPlaylistId!, onBack: () => setState(() => _openPlaylistId = null));
+      return PlaylistDetailScreen(
+        playlistId: _openPlaylistId!,
+        onBack: () => setState(() => _openPlaylistId = null),
+      );
     }
 
     switch (_selected) {
       case NavDestination.library:
         return const LibraryScreen(favoritesOnly: false);
+
       case NavDestination.favorites:
         return const LibraryScreen(favoritesOnly: true);
+
       case NavDestination.artists:
-        return ArtistsScreen(onArtistTap: (artist) => setState(() => _openArtist = artist));
+        return ArtistsScreen(
+          onArtistTap: (artist) {
+            setState(() => _openArtist = artist);
+          },
+        );
+
       case NavDestination.albums:
         return AlbumsScreen(
-          onAlbumTap: (album, artist) => setState(() => _openAlbum = (album: album, artist: artist)),
+          onAlbumTap: (album, artist) {
+            setState(() {
+              _openAlbum = (
+                album: album,
+                artist: artist,
+              );
+            });
+          },
         );
+
       case NavDestination.settings:
         return const SettingsScreen();
     }
@@ -104,7 +150,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     if (_miniPlayerActive) {
-      return MiniPlayerView(onExpand: _exitMiniPlayer);
+      return MiniPlayerView(
+        onExpand: _exitMiniPlayer,
+      );
     }
 
     return DynamicBackground(
@@ -115,7 +163,9 @@ class _AppShellState extends State<AppShell> {
             final width = constraints.maxWidth;
             final effectiveCollapsed = _collapsed || width < 900;
             final showQueue = _queueOpen && width >= 760;
-            final barMode = width < 700 ? PlayerBarMode.compact : PlayerBarMode.full;
+            final barMode = width < 700
+                ? PlayerBarMode.compact
+                : PlayerBarMode.full;
 
             return Column(
               children: [
@@ -127,36 +177,54 @@ class _AppShellState extends State<AppShell> {
                         stream: database.watchPlaylists(),
                         builder: (context, snapshot) {
                           final playlists = snapshot.data ?? [];
+
                           return Sidebar(
                             collapsed: effectiveCollapsed,
                             selected: _selected,
                             onSelect: _selectDestination,
-                            onToggleCollapsed: () => setState(() => _collapsed = !_collapsed),
+                            onToggleCollapsed: () {
+                              setState(() {
+                                _collapsed = !_collapsed;
+                              });
+                            },
                             onCreatePlaylist: _createPlaylist,
                             playlists: playlists,
                             openPlaylistId: _openPlaylistId,
-                            onPlaylistTap: (id) => setState(() {
-                              _openPlaylistId = id;
-                              _openArtist = null;
-                              _openAlbum = null;
-                            }),
+                            onPlaylistTap: (id) {
+                              setState(() {
+                                _openPlaylistId = id;
+                                _openArtist = null;
+                                _openAlbum = null;
+                              });
+                            },
                           );
                         },
                       ),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 12, top: 12, bottom: 12),
+                          padding: const EdgeInsets.only(
+                            right: 12,
+                            top: 12,
+                            bottom: 12,
+                          ),
                           child: _buildContent(),
                         ),
                       ),
-                      if (showQueue) QueuePanel(onClose: () => setState(() => _queueOpen = false)),
+                      if (showQueue)
+                        QueuePanel(
+                          onClose: () {
+                            setState(() => _queueOpen = false);
+                          },
+                        ),
                     ],
                   ),
                 ),
                 PlayerBar(
                   mode: barMode,
                   queueOpen: _queueOpen,
-                  onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
+                  onToggleQueue: () {
+                    setState(() => _queueOpen = !_queueOpen);
+                  },
                   onEnterMini: _enterMiniPlayer,
                 ),
               ],
