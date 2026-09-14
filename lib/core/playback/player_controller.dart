@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart';
 import 'package:just_audio/just_audio.dart';
 import '../theme/palette_extractor.dart';
 
 import '../database/app_database.dart';
+
+import 'package:flutter/material.dart';
+
 
 enum RepeatMode { off, all, one }
 
@@ -123,17 +124,31 @@ class PlayerController extends ChangeNotifier {
   Future<bool> _loadCurrent({required bool play}) async {
     final track = currentTrack;
     if (track == null) return false;
-    
+
     _updatePalette(track.artPath);
-    
+
     final myToken = ++_loadToken;
     _isLoading = true;
 
     bool success = false;
+
     try {
-      await _player.setFilePath(track.track.filePath);
+      final path = track.track.filePath;
+
+      if (path.startsWith('content://')) {
+        await _player.setAudioSource(
+          AudioSource.uri(Uri.parse(path)),
+        );
+      } else {
+        await _player.setFilePath(path);
+      }
+
       if (myToken != _loadToken) return false;
-      if (play) await _player.play();
+
+      if (play) {
+        await _player.play();
+      }
+
       success = true;
     } catch (_) {
       success = false;
@@ -146,7 +161,6 @@ class PlayerController extends ChangeNotifier {
 
     return success;
   }
-
   void _handlePlayerStateChange(PlayerState state) {
     if (_isLoading) return;
     notifyListeners();

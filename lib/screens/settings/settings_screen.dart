@@ -58,31 +58,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _rescanFolder(LibraryFolder folder) async {
-    if (_rescanningFolderId != null) return;
+    if (_rescanningFolderId != null) {
+      return;
+    }
+
+    debugPrint('Starting rescan');
+    debugPrint('Folder ID: ${folder.id}');
+    debugPrint('Folder name: ${folder.displayName}');
+    debugPrint('Folder identifier: ${folder.identifier}');
+    debugPrint('Identifier type: ${folder.identifierType}');
 
     setState(() {
       _rescanningFolderId = folder.id;
     });
 
     try {
-      final indexer = LibraryIndexer(db: database);
+      final indexer = LibraryIndexer(
+        db: database,
+      );
 
-      _scanSubscription = indexer.indexFolder(folder.identifier).listen(
-        (_) {},
+      _scanSubscription = indexer
+          .indexFolder(folder.identifier)
+          .listen(
+        (progress) {
+          debugPrint(
+            'Rescan progress: '
+            'processed=${progress.filesProcessed}, '
+            'skipped=${progress.filesSkippedUnchanged}, '
+            'file=${progress.currentFile}',
+          );
+        },
         onDone: () async {
-          await database.markFolderScanned(
-            folder.id,
-            DateTime.now(),
+          debugPrint(
+            'Rescan completed for: ${folder.identifier}',
           );
 
-          if (!mounted) return;
+          try {
+            await database.markFolderScanned(
+              folder.id,
+              DateTime.now(),
+            );
+          } catch (error, stackTrace) {
+            debugPrint(
+              'Failed to mark folder as scanned',
+            );
+            debugPrint('Error: $error');
+            debugPrint('Stack trace: $stackTrace');
+          }
+
+          if (!mounted) {
+            return;
+          }
 
           setState(() {
             _rescanningFolderId = null;
           });
         },
-        onError: (Object error) {
-          if (!mounted) return;
+        onError: (Object error, StackTrace stackTrace) {
+          debugPrint('RESCAN ERROR: $error');
+          debugPrint('RESCAN STACK TRACE: $stackTrace');
+
+          if (!mounted) {
+            return;
+          }
 
           setState(() {
             _rescanningFolderId = null;
@@ -90,13 +128,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Rescan failed: $error'),
+              content: Text(
+                'Rescan failed: $error',
+              ),
             ),
           );
         },
       );
-    } catch (error) {
-      if (!mounted) return;
+    } catch (error, stackTrace) {
+      debugPrint('COULD NOT START RESCAN: $error');
+      debugPrint('STACK TRACE: $stackTrace');
+
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
         _rescanningFolderId = null;
@@ -104,7 +149,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not start rescan: $error'),
+          content: Text(
+            'Could not start rescan: $error',
+          ),
         ),
       );
     }
@@ -167,7 +214,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _rescanningFolderId == folder.id;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(
+                    bottom: 8,
+                  ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -204,7 +253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   fontSize: 11,
                                 ),
                                 maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                overflow:
+                                    TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -217,21 +267,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(
+                                  child:
+                                      CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 )
                               : const Icon(
                                   Icons.refresh_rounded,
                                   size: 18,
-                                  color: AppColors.textSecondary,
+                                  color:
+                                      AppColors.textSecondary,
                                 ),
                           onPressed: isRescanning ||
-                                  _rescanningFolderId != null
+                                  _rescanningFolderId !=
+                                      null
                               ? null
-                              : () => _rescanFolder(folder),
+                              : () =>
+                                  _rescanFolder(folder),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
+                          constraints:
+                              const BoxConstraints(
                             minWidth: 32,
                             minHeight: 32,
                           ),
@@ -241,7 +296,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: const Icon(
                             Icons.delete_outline_rounded,
                             size: 18,
-                            color: AppColors.accentRed,
+                            color:
+                                AppColors.accentRed,
                           ),
                           onPressed: isRescanning
                               ? null
@@ -250,7 +306,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     folder,
                                   ),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
+                          constraints:
+                              const BoxConstraints(
                             minWidth: 32,
                             minHeight: 32,
                           ),
