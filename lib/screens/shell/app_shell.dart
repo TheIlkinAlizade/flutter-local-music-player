@@ -75,11 +75,11 @@ class _AppShellState extends State<AppShell> {
       await windowManager.setResizable(false);
       await windowManager.setSize(const Size(320, 320));
     }
-    setState(() => _miniPlayerActive = true);
+    if (mounted) setState(() => _miniPlayerActive = true);
   }
 
   Future<void> _exitMiniPlayer() async {
-    setState(() => _miniPlayerActive = false);
+    if (mounted) setState(() => _miniPlayerActive = false);
     if (_isDesktop) {
       await windowManager.setResizable(true);
       await windowManager.setSize(_normalWindowSize ?? const Size(1280, 800));
