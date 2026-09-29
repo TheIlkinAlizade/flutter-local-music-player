@@ -19,6 +19,8 @@ class PlayerController extends ChangeNotifier {
   int _loadToken = 0;
   bool _isLoading = false;
 
+  bool get isLoading => _isLoading;
+  
   PlayerController() {
     _player.playerStateStream.listen(_handlePlayerStateChange);
     _player.positionStream.listen((_) => notifyListeners());
