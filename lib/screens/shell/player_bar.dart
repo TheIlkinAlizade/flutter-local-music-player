@@ -86,6 +86,12 @@ class PlayerBar extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.queue_music_rounded, size: 22),
+                  color: queueOpen ? AppColors.accentBlue : AppColors.textSecondary,
+                  onPressed: onToggleQueue,
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
                   icon: Icon(
                     playerController.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     color: AppColors.textPrimary,

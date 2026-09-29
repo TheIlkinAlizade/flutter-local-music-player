@@ -199,15 +199,26 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _buildContent(),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: _buildContent(),
+                  ),
+                  if (_queueOpen)
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: QueuePanel(onClose: () => setState(() => _queueOpen = false)),
+                      ),
+                    ),
+                ],
               ),
             ),
             PlayerBar(
               mode: PlayerBarMode.slim,
-              queueOpen: false,
-              onToggleQueue: () {},
+              queueOpen: _queueOpen,
+              onToggleQueue: () => setState(() => _queueOpen = !_queueOpen),
               onEnterMini: _enterMiniPlayer,
             ),
           ],
